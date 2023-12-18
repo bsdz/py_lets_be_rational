@@ -27,7 +27,7 @@ merchantability, fitness for a particular purpose, or non-infringement.
 ======================================================================================
 """
 
-from py_lets_be_rational import constants
+from pylbr import constants
 
 
 class VolatilityValueException(Exception):
@@ -42,14 +42,20 @@ class VolatilityValueException(Exception):
 
 class BelowIntrinsicException(VolatilityValueException):
     def __init__(self):
-        VolatilityValueException.__init__(self, "The volatility is below the intrinsic value.",
-                                                       constants.VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_BELOW_INTRINSIC)
+        VolatilityValueException.__init__(
+            self,
+            "The volatility is below the intrinsic value.",
+            constants.VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_BELOW_INTRINSIC,
+        )
 
 
 class AboveMaximumException(VolatilityValueException):
     def __init__(self):
-        VolatilityValueException.__init__(self, "The volatility is above the maximum value.",
-                                                       constants.VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_ABOVE_MAXIMUM)
+        VolatilityValueException.__init__(
+            self,
+            "The volatility is above the maximum value.",
+            constants.VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_ABOVE_MAXIMUM,
+        )
 
 
 if __name__ == "__main__":

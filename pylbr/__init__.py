@@ -27,12 +27,13 @@ merchantability, fitness for a particular purpose, or non-infringement.
 ======================================================================================
 """
 
-from py_lets_be_rational.lets_be_rational import black
-from py_lets_be_rational.lets_be_rational import normalised_black
-from py_lets_be_rational.lets_be_rational import normalised_black_call
-from py_lets_be_rational.lets_be_rational import implied_volatility_from_a_transformed_rational_guess
-from py_lets_be_rational.lets_be_rational import implied_volatility_from_a_transformed_rational_guess_with_limited_iterations
-from py_lets_be_rational.lets_be_rational import normalised_implied_volatility_from_a_transformed_rational_guess
-from py_lets_be_rational.lets_be_rational import normalised_implied_volatility_from_a_transformed_rational_guess_with_limited_iterations
-from py_lets_be_rational.lets_be_rational import normalised_vega
-from py_lets_be_rational.normaldistribution import norm_cdf
+from pylbr.lets_be_rational import (
+    black,
+    implied_volatility_from_a_transformed_rational_guess,
+    implied_volatility_from_a_transformed_rational_guess_with_limited_iterations,
+    normalised_black,
+    normalised_black_call,
+    normalised_implied_volatility_from_a_transformed_rational_guess,
+    normalised_implied_volatility_from_a_transformed_rational_guess_with_limited_iterations,
+    normalised_vega,
+)

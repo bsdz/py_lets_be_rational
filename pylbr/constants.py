@@ -27,14 +27,12 @@ merchantability, fitness for a particular purpose, or non-infringement.
 ======================================================================================
 """
 
-from __future__ import absolute_import
-
-from sys import float_info
-DBL_MIN, DBL_MAX = float_info.min, float_info.max
 
 import sys
 from math import sqrt
+from sys import float_info
 
+DBL_MIN, DBL_MAX = float_info.min, float_info.max
 DBL_EPSILON = sys.float_info.epsilon
 
 SQRT_DBL_EPSILON = sqrt(DBL_EPSILON)
@@ -59,5 +57,7 @@ TWO_PI = 6.283185307179586476925286766559005768394338798750
 SQRT_PI_OVER_TWO = 1.253314137315500251207882642405522626503493370305  # sqrt(pi/2) to avoid misinterpretation.
 SQRT_THREE = 1.732050807568877293527446341505872366942805253810
 SQRT_ONE_OVER_THREE = 0.577350269189625764509148780501957455647601751270
-TWO_PI_OVER_SQRT_TWENTY_SEVEN = 1.209199576156145233729385505094770488189377498728  # 2*pi/sqrt(27)
+TWO_PI_OVER_SQRT_TWENTY_SEVEN = (
+    1.209199576156145233729385505094770488189377498728  # 2*pi/sqrt(27)
+)
 PI_OVER_SIX = 0.523598775598298873077107230546583814032861566563
