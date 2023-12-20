@@ -27,7 +27,7 @@ merchantability, fitness for a particular purpose, or non-infringement.
 ======================================================================================
 """
 
-from pylbr.lets_be_rational import (
+from pylbr.lets_be_rational import (  # noqa
     black,
     implied_volatility_from_a_transformed_rational_guess,
     implied_volatility_from_a_transformed_rational_guess_with_limited_iterations,

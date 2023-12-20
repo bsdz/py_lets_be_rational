@@ -6,6 +6,10 @@ authors = ["Blair Azzopardi <blairuk@gmail.com>"]
 readme = "README.md"
 packages = [{include = "pylbr"}]
 
+[tool.poetry.build]
+script = "build.py"
+generate-setup-file = true
+
 [tool.poetry.dependencies]
 python = "^3.10"
 scipy = "^1.11.4"
@@ -13,10 +17,13 @@ scipy = "^1.11.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.0"
-mypy = "^1.7.1"
+mypy = {extras = ["mypyc"], version = "^1.7.1"}
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0", "setuptools==69.0.2", "mypy==1.7.1"]
 build-backend = "poetry.core.masonry.api"
 
 

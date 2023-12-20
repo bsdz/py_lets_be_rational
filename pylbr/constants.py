@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 py_lets_be_rational.constants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,9 +43,6 @@ SQRT_DBL_MAX = sqrt(DBL_MAX)
 # Set this to 0 if you want positive results for (positive) denormalized inputs, else to DBL_MIN.
 # Note that you cannot achieve full machine accuracy from denormalized inputs!
 DENORMALIZATION_CUTOFF = 0
-
-VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_BELOW_INTRINSIC = -DBL_MAX
-VOLATILITY_VALUE_TO_SIGNAL_PRICE_IS_ABOVE_MAXIMUM = DBL_MAX
 
 ONE_OVER_SQRT_TWO = 0.7071067811865475244008443621048490392848359376887
 ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399460599343818684758586311649

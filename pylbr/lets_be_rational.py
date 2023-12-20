@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 py_lets_be_rational.lets_be_rational
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,7 +28,10 @@ merchantability, fitness for a particular purpose, or non-infringement.
 from math import exp, fabs, log, sqrt
 
 import numpy as np
-from scipy.special import erfcx as erfcx_cody
+import scipy.special as sc
+from numpy.polynomial.polynomial import polyval
+from scipy.linalg import pascal
+from scipy.special import erfcx
 from scipy.special import ndtr as norm_cdf
 from scipy.special import ndtri as inverse_norm_cdf
 
@@ -53,12 +54,20 @@ from pylbr.constants import (
     TWO_PI,
     TWO_PI_OVER_SQRT_TWENTY_SEVEN,
 )
-from pylbr.exceptions import AboveMaximumException, BelowIntrinsicException
 from pylbr.rationalcubic import (
     convex_rational_cubic_control_parameter_to_fit_second_derivative_at_left_side,
     convex_rational_cubic_control_parameter_to_fit_second_derivative_at_right_side,
     rational_cubic_interpolation,
 )
+
+
+class BelowIntrinsicException(Exception):
+    "The volatility is below the intrinsic value."
+
+
+class AboveMaximumException(Exception):
+    "The volatility is above the maximum value."
+
 
 implied_volatility_maximum_iterations = 2
 asymptotic_expansion_accuracy_threshold = -10
@@ -164,6 +173,12 @@ def _normalized_black_call_using_norm_cdf(x: float, s: float) -> float:
     return fabs(max(b, 0.0))
 
 
+_asym_facts_17 = np.concatenate(
+    [[1], [sc.factorial2(n) * (-1) ** ((n + 1) // 2) for n in range(1, 34, 2)]]
+)
+_asym_pascal_odd_17 = 2 * pascal(2 * 17 + 2, kind="lower")[:, 1::2][1::2, :].T
+
+
 def _asymptotic_expansion_of_normalized_black_call(h: float, t: float) -> float:
     """
     Asymptotic expansion of
@@ -192,598 +207,10 @@ def _asymptotic_expansion_of_normalized_black_call(h: float, t: float) -> float:
     r = (h + t) * (h - t)
     q = (h / r) * (h / r)
     # 17th order asymptotic expansion of A(h,t) in q, sufficient for Φ(h) [and thus y(h)] to have relative accuracy of 1.64E-16 for h <= η  with  η:=-10.
-    asymptotic_expansion_sum = 2.0 + q * (
-        -6.0e0
-        - 2.0 * e
-        + 3.0
-        * q
-        * (
-            1.0e1
-            + e * (2.0e1 + 2.0 * e)
-            + 5.0
-            * q
-            * (
-                -1.4e1
-                + e * (-7.0e1 + e * (-4.2e1 - 2.0 * e))
-                + 7.0
-                * q
-                * (
-                    1.8e1
-                    + e * (1.68e2 + e * (2.52e2 + e * (7.2e1 + 2.0 * e)))
-                    + 9.0
-                    * q
-                    * (
-                        -2.2e1
-                        + e
-                        * (
-                            -3.3e2
-                            + e * (-9.24e2 + e * (-6.6e2 + e * (-1.1e2 - 2.0 * e)))
-                        )
-                        + 1.1e1
-                        * q
-                        * (
-                            2.6e1
-                            + e
-                            * (
-                                5.72e2
-                                + e
-                                * (
-                                    2.574e3
-                                    + e
-                                    * (3.432e3 + e * (1.43e3 + e * (1.56e2 + 2.0 * e)))
-                                )
-                            )
-                            + 1.3e1
-                            * q
-                            * (
-                                -3.0e1
-                                + e
-                                * (
-                                    -9.1e2
-                                    + e
-                                    * (
-                                        -6.006e3
-                                        + e
-                                        * (
-                                            -1.287e4
-                                            + e
-                                            * (
-                                                -1.001e4
-                                                + e * (-2.73e3 + e * (-2.1e2 - 2.0 * e))
-                                            )
-                                        )
-                                    )
-                                )
-                                + 1.5e1
-                                * q
-                                * (
-                                    3.4e1
-                                    + e
-                                    * (
-                                        1.36e3
-                                        + e
-                                        * (
-                                            1.2376e4
-                                            + e
-                                            * (
-                                                3.8896e4
-                                                + e
-                                                * (
-                                                    4.862e4
-                                                    + e
-                                                    * (
-                                                        2.4752e4
-                                                        + e
-                                                        * (
-                                                            4.76e3
-                                                            + e * (2.72e2 + 2.0 * e)
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                    + 1.7e1
-                                    * q
-                                    * (
-                                        -3.8e1
-                                        + e
-                                        * (
-                                            -1.938e3
-                                            + e
-                                            * (
-                                                -2.3256e4
-                                                + e
-                                                * (
-                                                    -1.00776e5
-                                                    + e
-                                                    * (
-                                                        -1.84756e5
-                                                        + e
-                                                        * (
-                                                            -1.51164e5
-                                                            + e
-                                                            * (
-                                                                -5.4264e4
-                                                                + e
-                                                                * (
-                                                                    -7.752e3
-                                                                    + e
-                                                                    * (
-                                                                        -3.42e2
-                                                                        - 2.0 * e
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                        + 1.9e1
-                                        * q
-                                        * (
-                                            4.2e1
-                                            + e
-                                            * (
-                                                2.66e3
-                                                + e
-                                                * (
-                                                    4.0698e4
-                                                    + e
-                                                    * (
-                                                        2.3256e5
-                                                        + e
-                                                        * (
-                                                            5.8786e5
-                                                            + e
-                                                            * (
-                                                                7.05432e5
-                                                                + e
-                                                                * (
-                                                                    4.0698e5
-                                                                    + e
-                                                                    * (
-                                                                        1.08528e5
-                                                                        + e
-                                                                        * (
-                                                                            1.197e4
-                                                                            + e
-                                                                            * (
-                                                                                4.2e2
-                                                                                + 2.0
-                                                                                * e
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                            + 2.1e1
-                                            * q
-                                            * (
-                                                -4.6e1
-                                                + e
-                                                * (
-                                                    -3.542e3
-                                                    + e
-                                                    * (
-                                                        -6.7298e4
-                                                        + e
-                                                        * (
-                                                            -4.90314e5
-                                                            + e
-                                                            * (
-                                                                -1.63438e6
-                                                                + e
-                                                                * (
-                                                                    -2.704156e6
-                                                                    + e
-                                                                    * (
-                                                                        -2.288132e6
-                                                                        + e
-                                                                        * (
-                                                                            -9.80628e5
-                                                                            + e
-                                                                            * (
-                                                                                -2.01894e5
-                                                                                + e
-                                                                                * (
-                                                                                    -1.771e4
-                                                                                    + e
-                                                                                    * (
-                                                                                        -5.06e2
-                                                                                        - 2.0
-                                                                                        * e
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                                + 2.3e1
-                                                * q
-                                                * (
-                                                    5.0e1
-                                                    + e
-                                                    * (
-                                                        4.6e3
-                                                        + e
-                                                        * (
-                                                            1.0626e5
-                                                            + e
-                                                            * (
-                                                                9.614e5
-                                                                + e
-                                                                * (
-                                                                    4.08595e6
-                                                                    + e
-                                                                    * (
-                                                                        8.9148e6
-                                                                        + e
-                                                                        * (
-                                                                            1.04006e7
-                                                                            + e
-                                                                            * (
-                                                                                6.53752e6
-                                                                                + e
-                                                                                * (
-                                                                                    2.16315e6
-                                                                                    + e
-                                                                                    * (
-                                                                                        3.542e5
-                                                                                        + e
-                                                                                        * (
-                                                                                            2.53e4
-                                                                                            + e
-                                                                                            * (
-                                                                                                6.0e2
-                                                                                                + 2.0
-                                                                                                * e
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                    + 2.5e1
-                                                    * q
-                                                    * (
-                                                        -5.4e1
-                                                        + e
-                                                        * (
-                                                            -5.85e3
-                                                            + e
-                                                            * (
-                                                                -1.6146e5
-                                                                + e
-                                                                * (
-                                                                    -1.77606e6
-                                                                    + e
-                                                                    * (
-                                                                        -9.37365e6
-                                                                        + e
-                                                                        * (
-                                                                            -2.607579e7
-                                                                            + e
-                                                                            * (
-                                                                                -4.01166e7
-                                                                                + e
-                                                                                * (
-                                                                                    -3.476772e7
-                                                                                    + e
-                                                                                    * (
-                                                                                        -1.687257e7
-                                                                                        + e
-                                                                                        * (
-                                                                                            -4.44015e6
-                                                                                            + e
-                                                                                            * (
-                                                                                                -5.9202e5
-                                                                                                + e
-                                                                                                * (
-                                                                                                    -3.51e4
-                                                                                                    + e
-                                                                                                    * (
-                                                                                                        -7.02e2
-                                                                                                        - 2.0
-                                                                                                        * e
-                                                                                                    )
-                                                                                                )
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                        + 2.7e1
-                                                        * q
-                                                        * (
-                                                            5.8e1
-                                                            + e
-                                                            * (
-                                                                7.308e3
-                                                                + e
-                                                                * (
-                                                                    2.3751e5
-                                                                    + e
-                                                                    * (
-                                                                        3.12156e6
-                                                                        + e
-                                                                        * (
-                                                                            2.003001e7
-                                                                            + e
-                                                                            * (
-                                                                                6.919458e7
-                                                                                + e
-                                                                                * (
-                                                                                    1.3572783e8
-                                                                                    + e
-                                                                                    * (
-                                                                                        1.5511752e8
-                                                                                        + e
-                                                                                        * (
-                                                                                            1.0379187e8
-                                                                                            + e
-                                                                                            * (
-                                                                                                4.006002e7
-                                                                                                + e
-                                                                                                * (
-                                                                                                    8.58429e6
-                                                                                                    + e
-                                                                                                    * (
-                                                                                                        9.5004e5
-                                                                                                        + e
-                                                                                                        * (
-                                                                                                            4.7502e4
-                                                                                                            + e
-                                                                                                            * (
-                                                                                                                8.12e2
-                                                                                                                + 2.0
-                                                                                                                * e
-                                                                                                            )
-                                                                                                        )
-                                                                                                    )
-                                                                                                )
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                            + 2.9e1
-                                                            * q
-                                                            * (
-                                                                -6.2e1
-                                                                + e
-                                                                * (
-                                                                    -8.99e3
-                                                                    + e
-                                                                    * (
-                                                                        -3.39822e5
-                                                                        + e
-                                                                        * (
-                                                                            -5.25915e6
-                                                                            + e
-                                                                            * (
-                                                                                -4.032015e7
-                                                                                + e
-                                                                                * (
-                                                                                    -1.6934463e8
-                                                                                    + e
-                                                                                    * (
-                                                                                        -4.1250615e8
-                                                                                        + e
-                                                                                        * (
-                                                                                            -6.0108039e8
-                                                                                            + e
-                                                                                            * (
-                                                                                                -5.3036505e8
-                                                                                                + e
-                                                                                                * (
-                                                                                                    -2.8224105e8
-                                                                                                    + e
-                                                                                                    * (
-                                                                                                        -8.870433e7
-                                                                                                        + e
-                                                                                                        * (
-                                                                                                            -1.577745e7
-                                                                                                            + e
-                                                                                                            * (
-                                                                                                                -1.472562e6
-                                                                                                                + e
-                                                                                                                * (
-                                                                                                                    -6.293e4
-                                                                                                                    + e
-                                                                                                                    * (
-                                                                                                                        -9.3e2
-                                                                                                                        - 2.0
-                                                                                                                        * e
-                                                                                                                    )
-                                                                                                                )
-                                                                                                            )
-                                                                                                        )
-                                                                                                    )
-                                                                                                )
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                )
-                                                                + 3.1e1
-                                                                * q
-                                                                * (
-                                                                    6.6e1
-                                                                    + e
-                                                                    * (
-                                                                        1.0912e4
-                                                                        + e
-                                                                        * (
-                                                                            4.74672e5
-                                                                            + e
-                                                                            * (
-                                                                                8.544096e6
-                                                                                + e
-                                                                                * (
-                                                                                    7.71342e7
-                                                                                    + e
-                                                                                    * (
-                                                                                        3.8707344e8
-                                                                                        + e
-                                                                                        * (
-                                                                                            1.14633288e9
-                                                                                            + e
-                                                                                            * (
-                                                                                                2.07431664e9
-                                                                                                + e
-                                                                                                * (
-                                                                                                    2.33360622e9
-                                                                                                    + e
-                                                                                                    * (
-                                                                                                        1.6376184e9
-                                                                                                        + e
-                                                                                                        * (
-                                                                                                            7.0963464e8
-                                                                                                            + e
-                                                                                                            * (
-                                                                                                                1.8512208e8
-                                                                                                                + e
-                                                                                                                * (
-                                                                                                                    2.7768312e7
-                                                                                                                    + e
-                                                                                                                    * (
-                                                                                                                        2.215136e6
-                                                                                                                        + e
-                                                                                                                        * (
-                                                                                                                            8.184e4
-                                                                                                                            + e
-                                                                                                                            * (
-                                                                                                                                1.056e3
-                                                                                                                                + 2.0
-                                                                                                                                * e
-                                                                                                                            )
-                                                                                                                        )
-                                                                                                                    )
-                                                                                                                )
-                                                                                                            )
-                                                                                                        )
-                                                                                                    )
-                                                                                                )
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                    + 3.3e1
-                                                                    * (
-                                                                        -7.0e1
-                                                                        + e
-                                                                        * (
-                                                                            -1.309e4
-                                                                            + e
-                                                                            * (
-                                                                                -6.49264e5
-                                                                                + e
-                                                                                * (
-                                                                                    -1.344904e7
-                                                                                    + e
-                                                                                    * (
-                                                                                        -1.4121492e8
-                                                                                        + e
-                                                                                        * (
-                                                                                            -8.344518e8
-                                                                                            + e
-                                                                                            * (
-                                                                                                -2.9526756e9
-                                                                                                + e
-                                                                                                * (
-                                                                                                    -6.49588632e9
-                                                                                                    + e
-                                                                                                    * (
-                                                                                                        -9.0751353e9
-                                                                                                        + e
-                                                                                                        * (
-                                                                                                            -8.1198579e9
-                                                                                                            + e
-                                                                                                            * (
-                                                                                                                -4.6399188e9
-                                                                                                                + e
-                                                                                                                * (
-                                                                                                                    -1.6689036e9
-                                                                                                                    + e
-                                                                                                                    * (
-                                                                                                                        -3.67158792e8
-                                                                                                                        + e
-                                                                                                                        * (
-                                                                                                                            -4.707164e7
-                                                                                                                            + e
-                                                                                                                            * (
-                                                                                                                                -3.24632e6
-                                                                                                                                + e
-                                                                                                                                * (
-                                                                                                                                    -1.0472e5
-                                                                                                                                    + e
-                                                                                                                                    * (
-                                                                                                                                        -1.19e3
-                                                                                                                                        - 2.0
-                                                                                                                                        * e
-                                                                                                                                    )
-                                                                                                                                )
-                                                                                                                            )
-                                                                                                                        )
-                                                                                                                    )
-                                                                                                                )
-                                                                                                            )
-                                                                                                        )
-                                                                                                    )
-                                                                                                )
-                                                                                            )
-                                                                                        )
-                                                                                    )
-                                                                                )
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                    * q
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
+
+    # Here we use polyval to compute asym calc. hopefully written in c within numpy
+    asymptotic_expansion_sum = polyval(
+        q, _asym_facts_17 * polyval(e, _asym_pascal_odd_17)
     )
     b = (
         ONE_OVER_SQRT_TWO_PI
@@ -822,100 +249,21 @@ def _small_t_expansion_of_normalized_black_call(h, t):
     # Y(h) := Φ(h)/φ(h) = √(π/2)·erfcx(-h/√2)
     # a := 1+h·Y(h)  --- Note that due to h<0, and h·Y(h) -> -1 (from above) as h -> -∞, we also have that a>0 and a -> 0 as h -> -∞
     # w := t² , h2 := h²
-    a = 1 + h * (0.5 * SQRT_TWO_PI) * erfcx_cody(-ONE_OVER_SQRT_TWO * h)
+    a = 1 + h * (0.5 * SQRT_TWO_PI) * erfcx(-ONE_OVER_SQRT_TWO * h)
     w = t * t
     h2 = h * h
+    # fmt: off
+    # TODO: also convert this to polyval
     expansion = (
-        2
-        * t
-        * (
-            a
-            + w
-            * (
-                (-1 + 3 * a + a * h2) / 6
-                + w
-                * (
-                    (-7 + 15 * a + h2 * (-1 + 10 * a + a * h2)) / 120
-                    + w
-                    * (
-                        (
-                            -57
-                            + 105 * a
-                            + h2 * (-18 + 105 * a + h2 * (-1 + 21 * a + a * h2))
-                        )
-                        / 5040
-                        + w
-                        * (
-                            (
-                                -561
-                                + 945 * a
-                                + h2
-                                * (
-                                    -285
-                                    + 1260 * a
-                                    + h2 * (-33 + 378 * a + h2 * (-1 + 36 * a + a * h2))
-                                )
-                            )
-                            / 362880
-                            + w
-                            * (
-                                (
-                                    -6555
-                                    + 10395 * a
-                                    + h2
-                                    * (
-                                        -4680
-                                        + 17325 * a
-                                        + h2
-                                        * (
-                                            -840
-                                            + 6930 * a
-                                            + h2
-                                            * (
-                                                -52
-                                                + 990 * a
-                                                + h2 * (-1 + 55 * a + a * h2)
-                                            )
-                                        )
-                                    )
-                                )
-                                / 39916800
-                                + (
-                                    (
-                                        -89055
-                                        + 135135 * a
-                                        + h2
-                                        * (
-                                            -82845
-                                            + 270270 * a
-                                            + h2
-                                            * (
-                                                -20370
-                                                + 135135 * a
-                                                + h2
-                                                * (
-                                                    -1926
-                                                    + 25740 * a
-                                                    + h2
-                                                    * (
-                                                        -75
-                                                        + 2145 * a
-                                                        + h2 * (-1 + 78 * a + a * h2)
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                    * w
-                                )
-                                / 6227020800.0
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
+        2 * t * (a + w * (
+        (-1 + 3 * a + a * h2) / 6 + w * (
+        (-7 + 15 * a + h2 * (-1 + 10 * a + a * h2)) / 120 + w * (
+        (-57 + 105 * a + h2 * (-18 + 105 * a + h2 * (-1 + 21 * a + a * h2))) / 5040 + w * (
+        (-561 + 945 * a + h2 * (-285 + 1260 * a + h2 * (-33 + 378 * a + h2 * (-1 + 36 * a + a * h2)))) / 362880 + w * (
+        (-6555 + 10395 * a + h2 * (-4680 + 17325 * a + h2 * (-840 + 6930 * a + h2 * (-52 + 990 * a + h2 * (-1 + 55 * a + a * h2))))) / 39916800 + w * (
+        (-89055 + 135135 * a + h2 * (-82845 + 270270 * a + h2 * (-20370 + 135135 * a + h2 * (-1926 + 25740 * a + h2 * (-75 + 2145 * a + h2 * (-1 + 78 * a + a * h2)))))) ) / 6227020800.0
+    )))))))
+    # fmt: on
     b = ONE_OVER_SQRT_TWO_PI * exp((-0.5 * (h * h + t * t))) * expansion
     return fabs(max(b, 0.0))
 
@@ -962,10 +310,7 @@ def _normalised_black_call_using_erfcx(h: float, t: float) -> float:
     b = (
         0.5
         * exp(-0.5 * (h * h + t * t))
-        * (
-            erfcx_cody(-ONE_OVER_SQRT_TWO * (h + t))
-            - erfcx_cody(-ONE_OVER_SQRT_TWO * (h - t))
-        )
+        * (erfcx(-ONE_OVER_SQRT_TWO * (h + t)) - erfcx(-ONE_OVER_SQRT_TWO * (h - t)))
     )
     return fabs(max(b, 0.0))
 
@@ -1009,7 +354,7 @@ def _unchecked_normalised_implied_volatility_from_a_transformed_rational_guess_w
     f = -DBL_MAX
     s = -DBL_MAX
     ds = s
-    ds_previous = 0
+    ds_previous = 0.0
     s_left = DBL_MIN
     s_right = DBL_MAX
     # The temptation is great to use the optimised form b_c = exp(x/2)/2-exp(-x/2)·Phi(sqrt(-2·x)) but that would require implementing all of the above types of round-off and over/underflow handling for this expression, too.

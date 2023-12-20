@@ -19,3 +19,5 @@ dist
 .DS_Store
 
 .venv/
+build/
+setup.py

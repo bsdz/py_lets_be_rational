@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 py_lets_be_rational.rationalcubic
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,33 +40,19 @@ minimum_rational_cubic_control_parameter_value = -(1 - sqrt(DBL_EPSILON))
 maximum_rational_cubic_control_parameter_value = 2 / (DBL_EPSILON * DBL_EPSILON)
 
 
-def _is_zero(x):
+def _is_zero(x: float) -> bool:
     return fabs(x) < DBL_MIN
 
 
 def rational_cubic_control_parameter_to_fit_second_derivative_at_left_side(
-    x_l, x_r, y_l, y_r, d_l, d_r, second_derivative_l
-):
-    """
-
-    :param x_l:
-    :type x_l: float
-    :param x_r:
-    :type x_r: float
-    :param y_l:
-    :type y_l: float
-    :param y_r:
-    :type y_r: float
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param second_derivative_l:
-    :type second_derivative_l: float
-
-    :return:
-    :rtype: float
-    """
+    x_l: float,
+    x_r: float,
+    y_l: float,
+    y_r: float,
+    d_l: float,
+    d_r: float,
+    second_derivative_l: float,
+) -> float:
     h = x_r - x_l
     numerator = 0.5 * h * second_derivative_l + (d_r - d_l)
     if _is_zero(numerator):
@@ -84,22 +68,8 @@ def rational_cubic_control_parameter_to_fit_second_derivative_at_left_side(
 
 
 def minimum_rational_cubic_control_parameter(
-    d_l, d_r, s, preferShapePreservationOverSmoothness
-):
-    """
-
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param s:
-    :type s: float
-    :param preferShapePreservationOverSmoothness:
-    :type preferShapePreservationOverSmoothness: bool
-
-    :return:
-    :rtype: float
-    """
+    d_l: float, d_r: float, s: float, preferShapePreservationOverSmoothness: bool
+) -> float:
     monotonic = d_l * s >= 0 and d_r * s >= 0
     convex = d_l <= s <= d_r
     concave = d_l >= s >= d_r
@@ -134,28 +104,14 @@ def minimum_rational_cubic_control_parameter(
 
 
 def rational_cubic_control_parameter_to_fit_second_derivative_at_right_side(
-    x_l, x_r, y_l, y_r, d_l, d_r, second_derivative_r
-):
-    """
-
-    :param x_l:
-    :type x_l: float
-    :param x_r:
-    :type x_r: float
-    :param y_l:
-    :type y_l: float
-    :param y_r:
-    :type y_r: float
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param second_derivative_r:
-    :type second_derivative_r: float
-
-    :return:
-    :rtype: float
-    """
+    x_l: float,
+    x_r: float,
+    y_l: float,
+    y_r: float,
+    d_l: float,
+    d_r: float,
+    second_derivative_r: float,
+) -> float:
     h = x_r - x_l
     numerator = 0.5 * h * second_derivative_r + (d_r - d_l)
     if _is_zero(numerator):
@@ -171,37 +127,15 @@ def rational_cubic_control_parameter_to_fit_second_derivative_at_right_side(
 
 
 def convex_rational_cubic_control_parameter_to_fit_second_derivative_at_right_side(
-    x_l,
-    x_r,
-    y_l,
-    y_r,
-    d_l,
-    d_r,
-    second_derivative_r,
-    preferShapePreservationOverSmoothness,
-):
-    """
-
-    :param x_l:
-    :type x_l: float
-    :param x_r:
-    :type x_r: float
-    :param y_l:
-    :type y_l: float
-    :param y_r:
-    :type y_r: float
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param second_derivative_r:
-    :type second_derivative_r: float
-    :param preferShapePreservationOverSmoothness:
-    :type preferShapePreservationOverSmoothness: bool
-
-    :return:
-    :rtype: float
-    """
+    x_l: float,
+    x_r: float,
+    y_l: float,
+    y_r: float,
+    d_l: float,
+    d_r: float,
+    second_derivative_r: float,
+    preferShapePreservationOverSmoothness: bool,
+) -> float:
     r = rational_cubic_control_parameter_to_fit_second_derivative_at_right_side(
         x_l, x_r, y_l, y_r, d_l, d_r, second_derivative_r
     )
@@ -211,29 +145,16 @@ def convex_rational_cubic_control_parameter_to_fit_second_derivative_at_right_si
     return max(r, r_min)
 
 
-def rational_cubic_interpolation(x, x_l, x_r, y_l, y_r, d_l, d_r, r):
-    """
-
-    :param x:
-    :type x: float
-    :param x_l:
-    :type x_l: float
-    :param x_r:
-    :type x_r: float
-    :param y_l:
-    :type y_l: float
-    :param y_r:
-    :type y_r: float
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param r:
-    :type r: float
-
-    :return:
-    :rtype: float
-    """
+def rational_cubic_interpolation(
+    x: float,
+    x_l: float,
+    x_r: float,
+    y_l: float,
+    y_r: float,
+    d_l: float,
+    d_r: float,
+    r: float,
+) -> float:
     h = x_r - x_l
     if fabs(h) <= 0:
         return 0.5 * (y_l + y_r)
@@ -257,37 +178,15 @@ def rational_cubic_interpolation(x, x_l, x_r, y_l, y_r, d_l, d_r, r):
 
 
 def convex_rational_cubic_control_parameter_to_fit_second_derivative_at_left_side(
-    x_l,
-    x_r,
-    y_l,
-    y_r,
-    d_l,
-    d_r,
-    second_derivative_l,
-    preferShapePreservationOverSmoothness,
-):
-    """
-
-    :param x_l:
-    :type x_l: float
-    :param x_r:
-    :type x_r: float
-    :param y_l:
-    :type y_l: float
-    :param y_r:
-    :type y_r: float
-    :param d_l:
-    :type d_l: float
-    :param d_r:
-    :type d_r: float
-    :param second_derivative_l:
-    :type second_derivative_l: float
-    :param preferShapePreservationOverSmoothness:
-    :type preferShapePreservationOverSmoothness: bool
-
-    :return:
-    :rtype float
-    """
+    x_l: float,
+    x_r: float,
+    y_l: float,
+    y_r: float,
+    d_l: float,
+    d_r: float,
+    second_derivative_l: float,
+    preferShapePreservationOverSmoothness: bool,
+) -> float:
     r = rational_cubic_control_parameter_to_fit_second_derivative_at_left_side(
         x_l, x_r, y_l, y_r, d_l, d_r, second_derivative_l
     )
