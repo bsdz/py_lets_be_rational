@@ -33,8 +33,10 @@ merchantability, fitness for a particular purpose, or non-infringement.
 #
 
 from math import fabs, sqrt
+from sys import float_info
 
-from pylbr.constants import DBL_EPSILON, DBL_MAX, DBL_MIN
+DBL_MIN, DBL_MAX = float_info.min, float_info.max
+DBL_EPSILON = float_info.epsilon
 
 minimum_rational_cubic_control_parameter_value = -(1 - sqrt(DBL_EPSILON))
 maximum_rational_cubic_control_parameter_value = 2 / (DBL_EPSILON * DBL_EPSILON)

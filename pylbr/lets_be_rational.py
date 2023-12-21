@@ -26,39 +26,47 @@ merchantability, fitness for a particular purpose, or non-infringement.
 """
 
 from math import exp, fabs, log, sqrt
+from sys import float_info
 
 import numpy as np
-import scipy.special as sc
 from numpy.polynomial.polynomial import polyval
 from scipy.linalg import pascal
-from scipy.special import erfcx
+from scipy.special import erfcx, factorial2
 from scipy.special import ndtr as norm_cdf
 from scipy.special import ndtri as inverse_norm_cdf
 
-from pylbr.constants import (
-    DBL_EPSILON,
-    DBL_MAX,
-    DBL_MIN,
-    DENORMALIZATION_CUTOFF,
-    FOURTH_ROOT_DBL_EPSILON,
-    ONE_OVER_SQRT_TWO,
-    ONE_OVER_SQRT_TWO_PI,
-    PI_OVER_SIX,
-    SIXTEENTH_ROOT_DBL_EPSILON,
-    SQRT_DBL_MAX,
-    SQRT_DBL_MIN,
-    SQRT_ONE_OVER_THREE,
-    SQRT_PI_OVER_TWO,
-    SQRT_THREE,
-    SQRT_TWO_PI,
-    TWO_PI,
-    TWO_PI_OVER_SQRT_TWENTY_SEVEN,
-)
 from pylbr.rationalcubic import (
     convex_rational_cubic_control_parameter_to_fit_second_derivative_at_left_side,
     convex_rational_cubic_control_parameter_to_fit_second_derivative_at_right_side,
     rational_cubic_interpolation,
 )
+
+DBL_MIN, DBL_MAX = float_info.min, float_info.max
+DBL_EPSILON = float_info.epsilon
+
+SQRT_DBL_EPSILON = sqrt(DBL_EPSILON)
+FOURTH_ROOT_DBL_EPSILON = sqrt(SQRT_DBL_EPSILON)
+EIGHTH_ROOT_DBL_EPSILON = sqrt(FOURTH_ROOT_DBL_EPSILON)
+SIXTEENTH_ROOT_DBL_EPSILON = sqrt(EIGHTH_ROOT_DBL_EPSILON)
+SQRT_DBL_MIN = sqrt(DBL_MIN)
+SQRT_DBL_MAX = sqrt(DBL_MAX)
+
+# Set this to 0 if you want positive results for (positive) denormalized inputs, else to DBL_MIN.
+# Note that you cannot achieve full machine accuracy from denormalized inputs!
+DENORMALIZATION_CUTOFF = 0
+
+ONE_OVER_SQRT_TWO = 0.7071067811865475244008443621048490392848359376887
+ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399460599343818684758586311649
+SQRT_TWO_PI = 2.506628274631000502415765284811045253006986740610
+
+TWO_PI = 6.283185307179586476925286766559005768394338798750
+SQRT_PI_OVER_TWO = 1.253314137315500251207882642405522626503493370305  # sqrt(pi/2) to avoid misinterpretation.
+SQRT_THREE = 1.732050807568877293527446341505872366942805253810
+SQRT_ONE_OVER_THREE = 0.577350269189625764509148780501957455647601751270
+TWO_PI_OVER_SQRT_TWENTY_SEVEN = (
+    1.209199576156145233729385505094770488189377498728  # 2*pi/sqrt(27)
+)
+PI_OVER_SIX = 0.523598775598298873077107230546583814032861566563
 
 
 class BelowIntrinsicException(Exception):
@@ -74,11 +82,8 @@ asymptotic_expansion_accuracy_threshold = -10
 small_t_expansion_of_normalized_black_threshold = 2 * SIXTEENTH_ROOT_DBL_EPSILON
 
 
-_norm_pdf_C = np.sqrt(2 * np.pi)
-
-
 def norm_pdf(x: float) -> float:
-    return np.exp(-(x**2) / 2.0) / _norm_pdf_C
+    return np.exp(-(x**2) / 2.0) / SQRT_TWO_PI
 
 
 def _householder_factor(newton: float, halley: float, hh3: float) -> float:
@@ -174,7 +179,7 @@ def _normalized_black_call_using_norm_cdf(x: float, s: float) -> float:
 
 
 _asym_facts_17 = np.concatenate(
-    [[1], [sc.factorial2(n) * (-1) ** ((n + 1) // 2) for n in range(1, 34, 2)]]
+    [[1], [factorial2(n) * (-1) ** ((n + 1) // 2) for n in range(1, 34, 2)]]
 )
 _asym_pascal_odd_17 = 2 * pascal(2 * 17 + 2, kind="lower")[:, 1::2][1::2, :].T
 
@@ -221,7 +226,7 @@ def _asymptotic_expansion_of_normalized_black_call(h: float, t: float) -> float:
     return fabs(max(b, 0.0))
 
 
-def _small_t_expansion_of_normalized_black_call(h, t):
+def _small_t_expansion_of_normalized_black_call(h: float, t: float) -> float:
     """
     Calculation of
 
@@ -236,14 +241,6 @@ def _small_t_expansion_of_normalized_black_call(h, t):
     using an expansion of Y(h+t)-Y(h-t) for small t to twelvth order in t.
     Theoretically accurate to (better than) precision  ε = 2.23E-16  when  h<=0  and  t < τ  with  τ := 2·ε^(1/16) ≈ 0.21.
     The main bottleneck for precision is the coefficient a:=1+h·Y(h) when |h|>1 .
-
-    :param h:
-    :type h: float
-    :param t:
-    :type t: float
-
-    :return:
-    :rtype: float
     """
 
     # Y(h) := Φ(h)/φ(h) = √(π/2)·erfcx(-h/√2)
